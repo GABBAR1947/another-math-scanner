@@ -1,0 +1,4 @@
+// the configured options and settings for ams
+#define ams_VERSION_MAJOR @ams_VERSION_MAJOR@
+#define ams_VERSION_MINOR @ams_VERSION_MINOR@
+
