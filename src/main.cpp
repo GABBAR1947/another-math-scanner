@@ -1,11 +1,13 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-using namespace cv;
+#include "imgproc.hpp"
 
 #include <iostream>
 #include <cstdio>
 #include <string>
+
 using namespace std;
+using namespace cv;
 
 /*
  * Usage: <executable name> <input file> <output_file>
@@ -16,6 +18,14 @@ using namespace std;
 
 string process(Mat &img){
     string result = "tada";
+
+
+    int lighting = lighting_conditions(img);
+    binarize(img, lighting);
+    namedWindow("window", CV_WINDOW_NORMAL);
+    imshow("window", img);
+    waitKey(0);
+
     return result;
 }
 

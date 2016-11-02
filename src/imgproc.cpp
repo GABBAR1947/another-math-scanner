@@ -1,4 +1,5 @@
 #include "imgproc.hpp"
+#include "utils.hpp"
 #include <vector>
 
 int lighting_conditions(Mat img){
@@ -22,7 +23,7 @@ void binarize(Mat &img, int lighting){
         threshold(img, img, 127, 255, CV_THRESH_OTSU);
     else
         adaptiveThreshold(img, img, 255, 
-                CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 3);
+                CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 3, 5);
 }
 
 void skew_correct(Mat &img){
@@ -47,6 +48,7 @@ void segment(Mat &img){
     int nLabels;
     nLabels = connectedComponentsWithStats(img, labels, 
                                             stats, centroids);
+
 
     /* 
      * Use bounding boxes inclusion to generate a tree like structure.
