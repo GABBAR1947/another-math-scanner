@@ -22,6 +22,7 @@ string process(Mat &img){
 
     int lighting = lighting_conditions(img);
     binarize(img, lighting);
+
     namedWindow("window", CV_WINDOW_NORMAL);
     imshow("window", img);
     waitKey(0);
