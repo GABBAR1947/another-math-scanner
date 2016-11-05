@@ -19,11 +19,22 @@ void binarize(Mat &img, int lighting){
      */
 
     cvtColor(img, img, CV_BGR2GRAY);
-    if (lighting == UNIFORM_LIGHTING)
-        threshold(img, img, 127, 255, CV_THRESH_OTSU);
-    else
-        adaptiveThreshold(img, img, 255, 
-                CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 3, 5);
+
+
+    if (lighting == 0)
+        threshold(img, img, 0, 255, CV_THRESH_OTSU);
+    else{
+
+        GaussianBlur(img,img,Size(3,3),0.7,0.7);
+        adaptiveThreshold(img, img, 255,CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 19, 21); /*other option is to do LBP adaptive thresholding*/
+       //medianBlur( img,img, 1 ); can be used to remove salt and pepper noise
+    }
+
+}
+
+void invert(Mat &img)
+{
+    img=~img;
 }
 
 void skew_correct(Mat &img){
