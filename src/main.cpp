@@ -21,7 +21,11 @@ string process(Mat &img){
 
 
     int lighting = lighting_conditions(img);
+    resize(img, img, Size(img.cols/4, img.rows/4));
     binarize(img, lighting);
+    invert(img);
+    skew_correct(img);
+    invert(img);
 
     namedWindow("window", CV_WINDOW_NORMAL);
     imshow("window", img);

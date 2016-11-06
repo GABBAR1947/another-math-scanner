@@ -27,43 +27,43 @@ void binarize(Mat &img, int lighting){
 
         GaussianBlur(img,img,Size(3,3),0.7,0.7);
         adaptiveThreshold(img, img, 255,CV_ADAPTIVE_THRESH_GAUSSIAN_C, CV_THRESH_BINARY, 19, 21); /*other option is to do LBP adaptive thresholding*/
-       //medianBlur( img,img, 1 ); can be used to remove salt and pepper noise
+        //medianBlur( img,img, 1 ); can be used to remove salt and pepper noise
     }
 
 }
 
 void invert(Mat &img)
 {
-    img=~img;
+    bitwise_not(img, img);
 }
 
 void skew_correct(Mat &img){
 
-    /* 
-     * Expects a binarized image.
-     * Corrects for skew using Hough Transform
-     */
     vector<Vec4i> lines;
-    HoughLinesP(img , lines , 1, CV_PI/180, 100 , (img.size()).width/2.f,20);
+
+    HoughLinesP(img , lines , 1, CV_PI/180, 10 ,(img.size()).width / 4.f, (img.size()).width );
+
 
     Mat Dlines(img.size(), CV_8UC1, Scalar(0, 0, 0));
-
     double angle = 0.;
     unsigned LS = lines.size();
     for (unsigned i = 0; i < LS; i++)
     {
-        line(Dlines, Point(lines[i][0], lines[i][1]),
-                Point(lines[i][2], lines[i][3]), Scalar(255, 0 ,0));
+        line(Dlines, Point(lines[i][0], lines[i][1]),Point(lines[i][2], lines[i][3]), Scalar(255, 0 ,0));
+
         angle += atan2((double)lines[i][3] - lines[i][1],(double)lines[i][2] - lines[i][0]);
     }
 
+
     angle /= LS; 
 
-    cerr<<angle<<endl;
-
     vector<Point> points;
+
+    //cerr<<angle*180/CV_PI<<endl;
+
     Mat_<uchar>::iterator it;
     Mat_<uchar>::iterator end = img.end<uchar>();
+
     for(it = img.begin<uchar>() ; it!=end;it++)
     {
         if(*it)
@@ -72,11 +72,15 @@ void skew_correct(Mat &img){
 
     RotatedRect box = minAreaRect(Mat(points));
 
-    Mat RM = getRotationMatrix2D(box.center, angle, 1);
+    //cerr<<box.angle<<endl;
+    Mat RM = getRotationMatrix2D(box.center, angle*180/CV_PI, 1.0);
 
+    Mat fin,cropped;
     warpAffine(img, img, RM, img.size(), INTER_CUBIC);
+    //  getRectSubPix(fin, box.size, box.center, cropped);
 
 }
+
 
 void segment(Mat &img){
     /*
