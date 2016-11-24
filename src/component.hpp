@@ -15,8 +15,6 @@ struct component{
         bounding_box(bounding_box), centroid(centroid){
             Size s = Size(bounding_box.width, bounding_box.height);
             //Size s = Size(bounding_box.height, bounding_box.width);
-            cout<<"Initializing with size: "<<s<<endl;
-            cout<<"Rect defined by: "<<bounding_box<<endl;
             image = Mat::zeros(s, CV_8UC1);
     }
 

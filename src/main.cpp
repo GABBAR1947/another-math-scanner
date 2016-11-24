@@ -5,7 +5,7 @@
 #include <iostream>
 #include <cstdio>
 #include <string>
-#include "component.h"
+#include "component.hpp"
 
 using namespace std;
 using namespace cv;
@@ -26,7 +26,7 @@ string process(Mat &img){
     components = segment(img);
 
     for(auto c : components){
-        recognize(c.image);
+        //recognize(c.image);
     }
 
     imshow("output", img);
