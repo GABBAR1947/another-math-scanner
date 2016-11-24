@@ -5,6 +5,7 @@ auto _plus = join(" + ");
 auto _minus = join(" - ");
 auto _multiply = join(" * ");
 auto _divide = join(" / ");
+auto _exp = join("^");
 
 auto wrap_curly = [](string s){
     return "{"+s+"}";
@@ -46,3 +47,4 @@ auto range_f = [](string keyword){
 
 auto sum = range_f("\\sum");
 auto product = range_f("\\prod");
+auto integral = range_f("\\int");

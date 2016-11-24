@@ -44,6 +44,15 @@ int main(){
     z = functor("sqrt", args, product);
     result = boost::apply_visitor(show(), z);
     cout<<result<<"\n";
+
+    ast meh;
+    args.clear();
+    args.push_back(&t);
+    args.push_back(&u);
+    args.push_back(&z);
+    meh = functor("x", args, sum);
+    result = boost::apply_visitor(show(), meh);
+    cout<<result<<"\n";
     return 0;
 
 }

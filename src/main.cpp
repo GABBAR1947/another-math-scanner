@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cstdio>
 #include <string>
+#include "component.h"
 
 using namespace std;
 using namespace cv;
@@ -18,17 +19,17 @@ using namespace cv;
 
 string process(Mat &img){
     string result = "tada";
+    vector<component> components;
 
-
-    int lighting = lighting_conditions(img);
-    resize(img, img, Size(img.cols/4, img.rows/4));
-    binarize(img, lighting);
-    invert(img);
+    binarize(img);
     skew_correct(img);
-    invert(img);
+    components = segment(img);
 
-    namedWindow("window", CV_WINDOW_NORMAL);
-    imshow("window", img);
+    for(auto c : components){
+        recognize(c.image);
+    }
+
+    imshow("output", img);
     waitKey(0);
 
     return result;
@@ -56,6 +57,8 @@ int main(int argc, char *argv[]){
         return -1;
     
     }
+
+    namedWindow("output", CV_WINDOW_NORMAL);
 
     string equation_tex = process(img);
     

@@ -3,6 +3,7 @@
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include "component.hpp"
 using namespace cv;
 using namespace std;
 
@@ -13,9 +14,8 @@ enum lighting_type {
 };
 
 
-int lighting_conditions(Mat img);
-void binarize(Mat &img, int lighting);
+void binarize(Mat &img);
 void skew_correct(Mat &img);
-void segment(Mat &img);
+vector<component> segment(Mat &img);
 
 #endif

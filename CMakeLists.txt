@@ -7,7 +7,7 @@ set (ams_VERSION_MINOR 0)
 
 #
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++14")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++14 -g")
 
 # Requirements
 

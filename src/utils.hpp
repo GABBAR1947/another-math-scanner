@@ -6,12 +6,17 @@
 using namespace std;
 using namespace cv;
 
-struct sparse_entry{
-    int i, j;
+
+/*
+struct component{
+    Mat image;
+    Rect bounding_box;
+    Point centroid;
+
+    component(Mat image, Rect bounding_box, Point centroid):
+        image(image), bounding_box(bounding_box), centroid(centroid){}
+
 };
-
-typedef vector<vector<sparse_entry>> sparse_image;
-
-sparse_image to_sparse(Mat &labels, int nLabels);
+*/
 
 #endif
