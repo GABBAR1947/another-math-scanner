@@ -48,7 +48,8 @@ Mat hu_moments(Mat img){
 }
 
 
-datamap read_data(string name){
+
+recognizer::recognizer(string name){
     fstream datastream(name);
     string label, filename;
     vector<Mat> features;
@@ -61,17 +62,12 @@ datamap read_data(string name){
         features.push_back(feature);
     }
 
-    datamap result(features, labels);
-    return result;
+    data.set(features, labels);
 }
 
-
-
-string recognize(Mat img){
-    datamap d = read_data("labels.txt");
+string recognizer::recognize(Mat img){
     Mat query = hu_moments(img);
     int nearest;
-    nearest = nearest_neighbour(d.features, query);
-    return d.labels[nearest];
-
+    nearest = nearest_neighbour(data.features, query);
+    return data.labels[nearest];
 }

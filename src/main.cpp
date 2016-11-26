@@ -26,11 +26,16 @@ string process(Mat &img){
     skew_correct(img);
     components = segment(img);
 
+    recognizer R("labels.txt");
+
     for(auto &c : components){
-        c.label = recognize(c.image);
+        c.label = R.recognize(c.image);
+        cout<<"Label: "<<c.label<<endl;
+        imshow("output", c.image);
+        waitKey(0);
     }
 
-    result = assemble(components);
+    //result = assemble(components);
     return result;
 }
 
