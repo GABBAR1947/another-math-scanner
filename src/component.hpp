@@ -10,6 +10,7 @@ struct component{
     Mat image;
     Rect bounding_box;
     Point2f centroid;
+    string label;
 
     component(Rect bounding_box, Point2f centroid):
         bounding_box(bounding_box), centroid(centroid){

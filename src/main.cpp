@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <string>
 #include "component.hpp"
+#include "recognize.hpp"
 
 using namespace std;
 using namespace cv;
@@ -18,20 +19,18 @@ using namespace cv;
  */
 
 string process(Mat &img){
-    string result = "tada";
+    string result;
     vector<component> components;
 
     binarize(img);
     skew_correct(img);
     components = segment(img);
 
-    for(auto c : components){
-        //recognize(c.image);
+    for(auto &c : components){
+        c.label = recognize(c.image);
     }
 
-    imshow("output", img);
-    waitKey(0);
-
+    result = assemble(components);
     return result;
 }
 

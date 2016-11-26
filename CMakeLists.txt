@@ -23,4 +23,5 @@ configure_file (
 
 add_executable(main ${PROJECT_SOURCE_DIR}/src/main.cpp)
 add_library(imgproc ${PROJECT_SOURCE_DIR}/src/imgproc.cpp ${PROJECT_SOURCE_DIR}/src/utils.cpp)
-target_link_libraries(main ${OpenCV_LIBS} imgproc)
+add_library(recognize ${PROJECT_SOURCE_DIR}/src/recognize.cpp)
+target_link_libraries(main ${OpenCV_LIBS} imgproc recognize)
