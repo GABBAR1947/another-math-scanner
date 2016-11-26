@@ -11,7 +11,6 @@ int nearest_neighbour(vector<Mat> data, Mat query){
         
         }
         else{
-            Mat d = p - query;
             double distance = norm(p, query, NORM_L2);
             if (distance < min_distance){
                 min_distance = distance;
@@ -43,11 +42,32 @@ Mat hu_moments(Mat img){
         features.at<double>(0, i) = HU[i];
     }
 
-    features.at<double>(0, 7) = I;
+    features.at<double>(0, 7) = 0;
     return features;
 }
 
+Mat extractForeground(Mat &img){
+    int min_x, max_x, min_y, max_y;
+    min_y = img.cols + 1;
+    min_x = img.rows + 1;
 
+    max_x = -1;
+    max_y = -1;
+
+
+    for(int i=0; i<img.rows; i++){
+        for(int j=0; j<img.cols; j++){
+            if(img.at<unsigned char>(i, j)==0){
+                min_y = min(min_y, i);
+                max_y = max(max_y, i);
+                min_x = min(min_x, i);
+                max_x = max(max_x, i);
+            }
+        }
+    }
+
+    return img(Rect(min_x, min_y, max_x-min_x+1, max_y-min_y+1));
+}
 
 recognizer::recognizer(string name){
     fstream datastream(name);
@@ -58,6 +78,10 @@ recognizer::recognizer(string name){
         labels.push_back(label);
 
         Mat img = imread("pngs/"+filename, CV_LOAD_IMAGE_GRAYSCALE);
+        /* Get only black region from image. */
+        threshold(img, img, 127, 255, CV_THRESH_OTSU);
+        img = extractForeground(img);
+
         Mat feature = hu_moments(img);
         features.push_back(feature);
     }
@@ -67,6 +91,7 @@ recognizer::recognizer(string name){
 
 string recognizer::recognize(Mat img){
     Mat query = hu_moments(img);
+    cout<<query<<endl;
     int nearest;
     nearest = nearest_neighbour(data.features, query);
     return data.labels[nearest];

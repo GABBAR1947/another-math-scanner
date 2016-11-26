@@ -228,6 +228,7 @@ void skew_correct(Mat &img){
     Canny(edgemap, edgemap, 100, 2*100, 3);
     Point2f rt = rotation_params(edgemap, 1, CV_PI/180.0);
     rotateImage(img, rt.x, rt.y);
+    threshold(img, img, 127, 255, CV_THRESH_OTSU);
 }
 
 
