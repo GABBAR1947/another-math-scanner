@@ -242,7 +242,7 @@ Mat extractFeatures(Mat &img){
     Mat cat;
 
     vector<Mat> features = {
-        //hu_moments(img),
+        hu_moments(img),
         //misc_features(img),
         circular_topology_features(img),
         fourier_descriptors(img, 10)
@@ -273,7 +273,6 @@ Mat extractForeground(Mat &img){
         }
     }
     Rect roi = Rect(min_x, min_y, max_x-min_x+1, max_y-min_y+1);
-    cout<<"Boundary:"<<roi<<endl;
 
     return img(roi);
 }
@@ -284,28 +283,29 @@ recognizer::recognizer(string name){
     vector<Mat> features;
     vector<string> labels;
     while(datastream>>label>>filename){
-        cout<<"Learning:"<<label<<","<<filename<<endl;
+        //cout<<"Learning:"<<label<<","<<filename<<endl;
         labels.push_back(label);
 
         Mat img = imread("pngs/"+filename, CV_LOAD_IMAGE_GRAYSCALE);
         threshold(img, img, 127, 255, CV_THRESH_OTSU);
         img = extractForeground(img);
-        cout<<"Extracted foreground"<<endl;
+        imshow("output", img);
+        waitKey(0);
+       // cout<<"Extracted foreground"<<endl;
 
         Mat feature = extractFeatures(img);
         features.push_back(feature);
-        cout<<label<<" "<<feature<<endl;
+        //cout<<label<<" "<<feature<<endl;
     }
 
     data.set(features, labels);
 }
 
 string recognizer::recognize(Mat img){
-    cout<<"Recognize: "<<endl;
     Mat query = extractFeatures(img);
-    cout<<query<<endl;
+   // cout<<query<<endl;
     int nearest;
     nearest = nearest_neighbour(data.features, query);
-    cout<<"Nearest: "<<nearest<<endl;
+   // cout<<"Nearest: "<<nearest<<endl;
     return data.labels[nearest];
 }
