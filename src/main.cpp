@@ -23,7 +23,7 @@ string process(Mat &img){
     vector<component> components;
 
     binarize(img);
-    skew_correct(img);
+    //skew_correct(img);
     components = segment(img);
 
     recognizer R("labels.txt");
