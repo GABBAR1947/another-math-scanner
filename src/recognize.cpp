@@ -88,7 +88,19 @@ Mat hu_moments(Mat img){
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;
     findContours(edgemap, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-    Moments mu = moments(contours[0]);
+    int index = 0;
+    double MAX = -1.0;
+    
+    for( int i=0; i<contours.size();i++)
+    {
+        if(contourArea(contours[i]) > MAX)
+        {
+            MAX = contourArea(contours[i]);
+            index = i;
+        }
+    }
+
+    Moments mu = moments(contours[index]);
     double SZ = img.rows * img.cols;
 
     // Centralized moment of inertia.
