@@ -67,9 +67,12 @@ int main(int argc, char *argv[]){
 
     string equation_tex = process(img);
     
+    cout<<equation_tex<<endl;
+    /*
     FILE *output_fp;
     output_fp = fopen(output_tex_file, "w");
     fprintf(output_fp, "%s\n", equation_tex.c_str());
     fclose(output_fp);
+    */
     return 0;
 }

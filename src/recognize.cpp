@@ -1,4 +1,8 @@
+
 #include "recognize.hpp"
+#include <cmath>
+#include <algorithm>
+
 
 int nearest_neighbour(vector<Mat> data, Mat query){
     int index = 0; 
@@ -10,7 +14,6 @@ int nearest_neighbour(vector<Mat> data, Mat query){
     };
     for(auto p: data){
         if(!index){
-            //min_distance = norm(p, query, NORM_L2);
             min_distance = distance_metric(p, query); 
             min_index = index;
         
@@ -27,6 +30,53 @@ int nearest_neighbour(vector<Mat> data, Mat query){
     return min_index;
 }
 
+Mat fourier_descriptors(Mat img, int k){
+    Mat edgemap;
+    Canny(img, edgemap, 50, 150, 3);
+    vector<complex<double>> points;
+    int count = 0;
+    vector<vector<Point>> contours;
+    vector<Vec4i> hierarchy;
+    findContours(edgemap, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+    Point mean(0, 0);
+    for(auto point: contours[0])
+        mean += point;
+    cout<<mean<<endl;
+    if ( contours[0].size()){
+        mean.x /= round(contours[0].size());
+        mean.y /= round(contours[0].size());
+    }
+
+    for(auto p: contours[0]){
+        Point r = p - mean;
+        complex<double> c(r.x, r.y);
+        points.push_back(c);
+    }
+
+
+
+    vector<complex<double>> output, output_truncated;
+    dft(points, output, DFT_COMPLEX_OUTPUT|DFT_SCALE);
+
+    for(int i=0; i<min(k, (int)output.size()); i++){
+        output_truncated.push_back(output[i]);
+    }
+    while((int)output_truncated.size() < k){
+        output_truncated.push_back(complex<double>(0, 0));
+    }
+
+    vector<complex<double>> inversed;
+    dft(output_truncated, inversed, DFT_COMPLEX_OUTPUT|DFT_SCALE|DFT_INVERSE);
+    Mat result(Size(2*output_truncated.size(), 1), CV_64F);
+    int index = 0;
+    for(auto o: inversed){
+        result.at<double>(0, index) = o.real();
+        result.at<double>(0, index+1) = o.imag();
+        index = index + 2;
+    }
+
+    return result;
+}
 
 Mat hu_moments(Mat img){
     Mat features(Size(8, 1), CV_64F);
@@ -35,11 +85,13 @@ Mat hu_moments(Mat img){
     Mat edgemap;
 
     Canny(img, edgemap, 50, 150, 3);
-    Moments mu = moments(edgemap);
+    vector<vector<Point>> contours;
+    vector<Vec4i> hierarchy;
+    findContours(edgemap, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+    Moments mu = moments(contours[0]);
     double SZ = img.rows * img.cols;
 
     // Centralized moment of inertia.
-    //I = (mu.mu20 + mu.mu02)/SZ;
     int N = 0;
     int cx = edgemap.cols/2, cy = edgemap.rows/2;
     for(int i=0; i<edgemap.rows; i++){
@@ -51,10 +103,8 @@ Mat hu_moments(Mat img){
         }
     }
 
-    //cout<<I<<" "<<SZ<<endl;
     if (N!=0)
         I = I/(double)(N*N);
-    //features.at<double>(0, 7) = I;
     features.at<double>(0, 7) = I;
 
 
@@ -70,7 +120,7 @@ Mat hu_moments(Mat img){
 Mat misc_features(Mat &img){
     Mat features(Size(3, 1), CV_64F);
     features = Scalar(0);
-    //features.at<double>(0, 0) = img.cols/(double)(img.rows);
+    features.at<double>(0, 0) = img.cols/(double)(img.rows);
     return features;
 }
 
@@ -84,6 +134,9 @@ int calculate_crossings(vector<int> V){
 }
 
 Mat padd_image(Mat img, int width){
+
+    resize(img, img, Size(width, width));
+    return img;
     int pr, pc;
     double scale;
     if ( img.cols > img.rows)
@@ -118,7 +171,7 @@ Mat padd_image(Mat img, int width){
 }
 
 Mat circular_topology_features(Mat image){
-    Mat padded = padd_image(image, 64);
+    Mat padded = padd_image(image, 256);
     double max_radius, spacing;
     int count = 9;
     max_radius = (double)((padded.rows - 10)/2);
@@ -158,9 +211,10 @@ Mat extractFeatures(Mat &img){
     Mat cat;
 
     vector<Mat> features = {
-        hu_moments(img),
+        //hu_moments(img),
         misc_features(img),
-        circular_topology_features(img)
+        circular_topology_features(img),
+        fourier_descriptors(img, 10)
     };
 
     //vconcat(features, cat);
