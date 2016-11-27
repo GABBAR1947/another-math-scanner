@@ -201,8 +201,6 @@ Mat padd_image(Mat img, int width){
     result = Scalar::all(255);
     img.copyTo(result(r));
     result.copyTo(img);
-    imshow("output", img);
-    waitKey(0);
     return img;
 }
 
@@ -245,7 +243,7 @@ Mat extractFeatures(Mat &img){
         hu_moments(img),
         //misc_features(img),
         circular_topology_features(img),
-        fourier_descriptors(img, 10)
+        //fourier_descriptors(img, 10)
     };
 
     hconcat(features, cat);
@@ -289,8 +287,6 @@ recognizer::recognizer(string name){
         Mat img = imread("pngs/"+filename, CV_LOAD_IMAGE_GRAYSCALE);
         threshold(img, img, 127, 255, CV_THRESH_OTSU);
         img = extractForeground(img);
-        imshow("output", img);
-        waitKey(0);
        // cout<<"Extracted foreground"<<endl;
 
         Mat feature = extractFeatures(img);
@@ -302,6 +298,10 @@ recognizer::recognizer(string name){
 }
 
 string recognizer::recognize(Mat img){
+    erode(img, img, getStructuringElement(MORPH_ELLIPSE, Size(3, 3)));
+    dilate(img, img, getStructuringElement(MORPH_ELLIPSE, Size(2, 2)));
+    imshow("output", img);
+    waitKey(0);
     Mat query = extractFeatures(img);
    // cout<<query<<endl;
     int nearest;

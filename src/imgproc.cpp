@@ -103,15 +103,6 @@ Point2f rotation_params(Mat &img, double dr, double dt){
             if(ri > 0 and ri < (int)(r_max+1) and ti < 180){
                 count.at<int>(ri, ti) += 1;
                 int val = count.at<int>(ri, ti);
-                if ( val > 100000){
-                    cout<<ri<<","<<ti<<":";
-                    cout<<val<<endl;
-                }
-            }
-
-            else{
-                //cout<<"What the fuck! - ";
-                //cout<<ri<<","<<ti<<endl;
             }
         }
     }
