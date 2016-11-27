@@ -64,7 +64,6 @@ Point2f rotation_params(Mat &img, double dr, double dt){
         return sqrt(x*x + y*y);
     };
 
-    cout<<"Detecting max"<<endl;
     double r_max = norm(img.cols, img.rows);
 
     vector<Point2i> foreground;
@@ -85,13 +84,11 @@ Point2f rotation_params(Mat &img, double dr, double dt){
     Size rt_size = Size(t_max_i, r_max_i);
     Mat count(rt_size, CV_32S);
     count = Scalar::all(0);
-    cout<<"Initialized count"<<endl;
     for(int i=0; i<r_max_i; i++){
         for(int j=0; j<t_max_i; j++){
             assert(count.at<int>(i, j) == 0);
         }
     }
-    cout<<"Sizes: "<<(int)((r_max/dr)+1)<<","<<int(CV_PI/dt)+1<<endl;
     for(double t=0; t < CV_PI; t += dt){
         for(auto p: foreground){
             int x, y;
@@ -258,7 +255,7 @@ vector<component> segment(Mat &img){
     Mat labelled(img.size(), CV_8UC3);
 
     vector<component> components;
-    for(int i=0; i<nLabels; i++){
+    for(int i=1; i<nLabels; i++){
         int x, y, w, h, xc, yc;
 
         x = stats.at<int>(i, CC_STAT_LEFT);
@@ -279,10 +276,12 @@ vector<component> segment(Mat &img){
     for(int i=0; i<img.rows; i++){
         for(int j=0; j<img.cols; j++){
             int label = labels.at<int>(i, j);
-            labelled.at<Vec3b>(i, j) = colors[label];
-            components[label].set(i, j, img.at<unsigned char>(i, j));
+            if(label){
+                labelled.at<Vec3b>(i, j) = colors[label];
+                components[label-1].set(i, j, img.at<unsigned char>(i, j));
+            }
         }
     }
-    
+
     return components;
 }
