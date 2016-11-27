@@ -1,8 +1,6 @@
-
 #include "recognize.hpp"
 #include <cmath>
 #include <algorithm>
-
 
 int nearest_neighbour(vector<Mat> data, Mat query){
     int index = 0; 
@@ -30,34 +28,57 @@ int nearest_neighbour(vector<Mat> data, Mat query){
     return min_index;
 }
 
+template<class T>
+int maxAreaContour(vector<vector<T>> &contours){
+    int max_area_index = 0;
+    double max_area = -1.0;
+    
+    for( int i=0; i<contours.size();i++){
+        if(contourArea(contours[i]) > max_area)
+        {
+            max_area = contourArea(contours[i]);
+            max_area_index = i;
+        }
+    }
+    return max_area_index;
+}
+
 Mat fourier_descriptors(Mat img, int k){
+
+    /* Apply canny to find boundaries */
     Mat edgemap;
     Canny(img, edgemap, 50, 150, 3);
+
+    /* Contour detection */
     vector<complex<double>> points;
-    int count = 0;
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;
     findContours(edgemap, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+
+    int max_area_index = maxAreaContour(contours);
+
+    /* Contour relative to centroid */
     Point mean(0, 0);
-    for(auto point: contours[0])
+    for(auto point: contours[max_area_index])
         mean += point;
-    cout<<mean<<endl;
-    if ( contours[0].size()){
-        mean.x /= round(contours[0].size());
-        mean.y /= round(contours[0].size());
+    if (contours[max_area_index].size()){
+        mean.x /= round(contours[max_area_index].size());
+        mean.y /= round(contours[max_area_index].size());
     }
 
-    for(auto p: contours[0]){
+    for(auto p: contours[max_area_index]){
         Point r = p - mean;
         complex<double> c(r.x, r.y);
         points.push_back(c);
     }
 
 
-
+    /* Run Discrete fourier transform */
     vector<complex<double>> output, output_truncated;
     dft(points, output, DFT_COMPLEX_OUTPUT|DFT_SCALE);
 
+
+    /* Choose the first k fourier coefficents */
     for(int i=0; i<min(k, (int)output.size()); i++){
         output_truncated.push_back(output[i]);
     }
@@ -65,11 +86,16 @@ Mat fourier_descriptors(Mat img, int k){
         output_truncated.push_back(complex<double>(0, 0));
     }
 
+    /*
     vector<complex<double>> inversed;
+
     dft(output_truncated, inversed, DFT_COMPLEX_OUTPUT|DFT_SCALE|DFT_INVERSE);
+    */
+
+    /* Pack into a matrix as features */
     Mat result(Size(2*output_truncated.size(), 1), CV_64F);
     int index = 0;
-    for(auto o: inversed){
+    for(auto o: output_truncated){
         result.at<double>(0, index) = o.real();
         result.at<double>(0, index+1) = o.imag();
         index = index + 2;
@@ -77,6 +103,7 @@ Mat fourier_descriptors(Mat img, int k){
 
     return result;
 }
+
 
 Mat hu_moments(Mat img){
     Mat features(Size(8, 1), CV_64F);
@@ -88,20 +115,10 @@ Mat hu_moments(Mat img){
     vector<vector<Point>> contours;
     vector<Vec4i> hierarchy;
     findContours(edgemap, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
-    int index = 0;
-    double MAX = -1.0;
-    
-    for( int i=0; i<contours.size();i++)
-    {
-        if(contourArea(contours[i]) > MAX)
-        {
-            MAX = contourArea(contours[i]);
-            index = i;
-        }
-    }
 
-    Moments mu = moments(contours[index]);
-    double SZ = img.rows * img.cols;
+    int max_area_index = maxAreaContour(contours);
+
+    Moments mu = moments(contours[max_area_index]);
 
     // Centralized moment of inertia.
     int N = 0;
@@ -117,6 +134,7 @@ Mat hu_moments(Mat img){
 
     if (N!=0)
         I = I/(double)(N*N);
+
     features.at<double>(0, 7) = I;
 
 
@@ -146,9 +164,6 @@ int calculate_crossings(vector<int> V){
 }
 
 Mat padd_image(Mat img, int width){
-
-    resize(img, img, Size(width, width));
-    return img;
     int pr, pc;
     double scale;
     if ( img.cols > img.rows)
@@ -179,12 +194,20 @@ Mat padd_image(Mat img, int width){
     }
 
     threshold(img, img, 127, 255, CV_THRESH_OTSU);
+
+    int padding = 10;
+    Mat result(Size(img.cols+2*padding, img.rows+2*padding), img.type());
+    Rect r = Rect(padding, padding, img.cols, img.rows);
+    result = Scalar::all(255);
+    img.copyTo(result(r));
+    result.copyTo(img);
+    imshow("output", img);
+    waitKey(0);
     return img;
 }
 
 Mat circular_topology_features(Mat image){
     Mat padded = padd_image(image, 256);
-    Canny(padded, padded, 50, 150, 3);
     double max_radius, spacing;
     int count = 9;
     max_radius = (double)((padded.rows - 10)/2);
@@ -204,21 +227,16 @@ Mat circular_topology_features(Mat image){
 
         vector<int> contourmap;
         for(auto p: contour){
-            //p = p+center;
-            //int val = mask.at<unsigned char>(p.y, p.x);
             int val = padded.at<unsigned char>(p.y, p.x);
-            //cout<<"Point"<<p<<": "<<val<<endl;
             contourmap.push_back(val);
         }
+
         int crossing = calculate_crossings(contourmap);
         features.at<double>(0, index) = (double)crossing;
         index = index + 1;
-        //imshow("output", mask);
-        //waitKey(0);
     }
     return features;
 }
-
 
 Mat extractFeatures(Mat &img){
     Mat cat;
@@ -226,11 +244,10 @@ Mat extractFeatures(Mat &img){
     vector<Mat> features = {
         //hu_moments(img),
         //misc_features(img),
-        //circular_topology_features(img),
+        circular_topology_features(img),
         fourier_descriptors(img, 10)
     };
 
-    //vconcat(features, cat);
     hconcat(features, cat);
     return cat;
 
@@ -271,14 +288,10 @@ recognizer::recognizer(string name){
         labels.push_back(label);
 
         Mat img = imread("pngs/"+filename, CV_LOAD_IMAGE_GRAYSCALE);
-        //imshow("output", img);
-        //waitKey(0);
-        /* Get only black region from image. */
         threshold(img, img, 127, 255, CV_THRESH_OTSU);
         img = extractForeground(img);
         cout<<"Extracted foreground"<<endl;
 
-        //Mat feature = hu_moments(img);
         Mat feature = extractFeatures(img);
         features.push_back(feature);
         cout<<label<<" "<<feature<<endl;
@@ -288,7 +301,6 @@ recognizer::recognizer(string name){
 }
 
 string recognizer::recognize(Mat img){
-    //Mat query = hu_moments(img);
     cout<<"Recognize: "<<endl;
     Mat query = extractFeatures(img);
     cout<<query<<endl;

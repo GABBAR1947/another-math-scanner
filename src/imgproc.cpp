@@ -170,7 +170,6 @@ Point2f rotation_params(Mat &img, double dr, double dt){
 
 }
 
-
 void binarize(Mat &src){
     /*
      * Binarizes an image according to lighting provided.
@@ -215,8 +214,6 @@ void binarize(Mat &src){
     img.copyTo(src);
 }
 
-
-
 void skew_correct(Mat &img){
     Mat edgemap;
     img.copyTo(edgemap);
@@ -227,7 +224,6 @@ void skew_correct(Mat &img){
     rotateImage(img, rt.x, rt.y);
     threshold(img, img, 127, 255, CV_THRESH_OTSU);
 }
-
 
 vector<component> segment(Mat &img){
     /*
