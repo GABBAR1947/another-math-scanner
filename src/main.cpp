@@ -29,14 +29,6 @@ string process(Mat &img){
     recognizer R("labels.txt");
 
     for(auto &c : components){
-        for(int i=0; i<c.image.rows; i++){
-            for(int j=0; j<c.image.cols; j++){
-                int val = img.at<unsigned char>(i, j);
-                if( val != 0 and val != 255){
-                    cout<<i<<" "<<j<<endl;
-                }
-            }
-        }
         cout<<c.image.size()<<endl;
         c.label = R.recognize(255-c.image);
         cout<<"Label: "<<c.label<<endl;

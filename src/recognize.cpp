@@ -29,7 +29,7 @@ int nearest_neighbour(vector<Mat> data, Mat query){
 
 
 Mat hu_moments(Mat img){
-    Mat features(Size(1, 8), CV_64F);
+    Mat features(Size(8, 1), CV_64F);
 
     double I = 0;
     Mat edgemap;
@@ -51,7 +51,7 @@ Mat hu_moments(Mat img){
         }
     }
 
-    cout<<I<<" "<<SZ<<endl;
+    //cout<<I<<" "<<SZ<<endl;
     if (N!=0)
         I = I/(double)(N*N);
     //features.at<double>(0, 7) = I;
@@ -68,21 +68,103 @@ Mat hu_moments(Mat img){
 }
 
 Mat misc_features(Mat &img){
-    Mat features(Size(1, 3), CV_64F);
+    Mat features(Size(3, 1), CV_64F);
     features = Scalar(0);
     //features.at<double>(0, 0) = img.cols/(double)(img.rows);
     return features;
 }
+
+int calculate_crossings(vector<int> V){
+    int crossings = 0;
+    for(int i=1; i<V.size(); i++){
+        if  ( V[i] != V[i-1])
+            crossings = crossings + 1;
+    }
+    return crossings;
+}
+
+Mat padd_image(Mat img, int width){
+    int pr, pc;
+    double scale;
+    if ( img.cols > img.rows)
+        scale = img.cols/(double)width;
+    else
+        scale = img.rows/(double)width;
+    pr = img.rows * scale;
+    pc = img.cols * scale;
+    resize(img, img, Size(pc, pr));
+
+    if ( img.cols > img.rows ){
+        int delta = img.cols - img.rows;
+        Mat result(Size(img.cols, img.cols), img.type());
+        result = Scalar::all(255);
+        int w = delta/2;
+        Rect r = Rect(0, w, img.cols, img.rows);
+        img.copyTo(result(r));
+        result.copyTo(img);
+    }
+    else{
+        int delta = img.rows - img.cols;
+        Mat result(Size(img.rows, img.rows), img.type());
+        result = Scalar::all(255);
+        int w = delta/2;
+        Rect r = Rect(w, 0, img.cols, img.rows);
+        img.copyTo(result(r));
+        result.copyTo(img);
+    }
+
+    threshold(img, img, 127, 255, CV_THRESH_OTSU);
+    return img;
+}
+
+Mat circular_topology_features(Mat image){
+    Mat padded = padd_image(image, 64);
+    double max_radius, spacing;
+    int count = 9;
+    max_radius = (double)((padded.rows - 10)/2);
+    spacing = max_radius/(double)count;
+
+    Mat features(Size(count-1, 1), CV_64F);
+    int index = 0;
+    for(double r=spacing; r < max_radius; r += spacing ){
+        Mat mask = Mat::zeros(padded.size(), padded.type());
+        Point center(mask.cols/2, mask.rows/2);
+        int thickness=1, lineType=8;
+        circle(mask, center, r, Scalar(255), thickness, lineType);
+
+        vector<Point> contour;
+        Size axes(r, r);
+        ellipse2Poly(center, axes, 0, 0, 360, 1, contour);
+
+        vector<int> contourmap;
+        for(auto p: contour){
+            //p = p+center;
+            //int val = mask.at<unsigned char>(p.y, p.x);
+            int val = padded.at<unsigned char>(p.y, p.x);
+            //cout<<"Point"<<p<<": "<<val<<endl;
+            contourmap.push_back(val);
+        }
+        int crossing = calculate_crossings(contourmap);
+        features.at<double>(0, index) = (double)crossing;
+        index = index + 1;
+        //imshow("output", mask);
+        //waitKey(0);
+    }
+    return features;
+}
+
 
 Mat extractFeatures(Mat &img){
     Mat cat;
 
     vector<Mat> features = {
         hu_moments(img),
-        misc_features(img)
+        misc_features(img),
+        circular_topology_features(img)
     };
 
-    vconcat(features, cat);
+    //vconcat(features, cat);
+    hconcat(features, cat);
     return cat;
 
 }
@@ -116,6 +198,7 @@ recognizer::recognizer(string name){
     vector<Mat> features;
     vector<string> labels;
     while(datastream>>label>>filename){
+        cout<<"Learning:"<<label<<","<<filename<<endl;
         labels.push_back(label);
 
         Mat img = imread("pngs/"+filename, CV_LOAD_IMAGE_GRAYSCALE);
@@ -134,9 +217,11 @@ recognizer::recognizer(string name){
 
 string recognizer::recognize(Mat img){
     //Mat query = hu_moments(img);
+    cout<<"Recognize: "<<endl;
     Mat query = extractFeatures(img);
     cout<<query<<endl;
     int nearest;
     nearest = nearest_neighbour(data.features, query);
+    cout<<"Nearest: "<<nearest<<endl;
     return data.labels[nearest];
 }
