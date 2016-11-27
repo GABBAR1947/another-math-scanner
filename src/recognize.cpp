@@ -213,7 +213,7 @@ Mat circular_topology_features(Mat image){
 
     Mat features(Size(count-1, 1), CV_64F);
     int index = 0;
-    for(double r=spacing; r < max_radius; r += spacing ){
+    for(double r=2*spacing; r < max_radius; r += spacing ){
         Mat mask = Mat::zeros(padded.size(), padded.type());
         Point center(mask.cols/2, mask.rows/2);
         int thickness=1, lineType=8;
@@ -241,9 +241,9 @@ Mat extractFeatures(Mat &img){
 
     vector<Mat> features = {
         hu_moments(img),
-        //misc_features(img),
+        misc_features(img),
         circular_topology_features(img),
-        //fourier_descriptors(img, 10)
+        fourier_descriptors(img, 50)
     };
 
     hconcat(features, cat);
@@ -281,17 +281,14 @@ recognizer::recognizer(string name){
     vector<Mat> features;
     vector<string> labels;
     while(datastream>>label>>filename){
-        //cout<<"Learning:"<<label<<","<<filename<<endl;
         labels.push_back(label);
 
         Mat img = imread("pngs/"+filename, CV_LOAD_IMAGE_GRAYSCALE);
         threshold(img, img, 127, 255, CV_THRESH_OTSU);
         img = extractForeground(img);
-       // cout<<"Extracted foreground"<<endl;
 
         Mat feature = extractFeatures(img);
         features.push_back(feature);
-        //cout<<label<<" "<<feature<<endl;
     }
 
     data.set(features, labels);
@@ -303,9 +300,7 @@ string recognizer::recognize(Mat img){
     imshow("output", img);
     waitKey(0);
     Mat query = extractFeatures(img);
-   // cout<<query<<endl;
     int nearest;
     nearest = nearest_neighbour(data.features, query);
-   // cout<<"Nearest: "<<nearest<<endl;
     return data.labels[nearest];
 }

@@ -7,6 +7,7 @@
 #include <string>
 #include "component.hpp"
 #include "recognize.hpp"
+#include "assemble.hpp"
 
 using namespace std;
 using namespace cv;
@@ -38,7 +39,7 @@ string process(Mat &img){
         waitKey(0);
     }
 
-    //result = assemble(components);
+    result = assemble(components);
     return result;
 }
 
