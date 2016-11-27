@@ -23,6 +23,8 @@ string process(Mat &img){
     vector<component> components;
 
     binarize(img);
+    //cvtColor(img, img, CV_BGR2GRAY);
+    //threshold(img, img, 127, 255, CV_THRESH_OTSU);
     skew_correct(img);
     components = segment(img);
 

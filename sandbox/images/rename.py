@@ -1,6 +1,7 @@
 def gen_convert_command(x):
     fcodes = ["phv", "jvn", "cs", "cm", ""]
     svg = '.svg'
+    size = 256
     for code in fcodes:
         ccode = code + svg
         if ( len(ccode) < len(x)):
@@ -13,7 +14,7 @@ def gen_convert_command(x):
                 toName += '.png'
                 #inkscape -z -e test.png -w 1024 -h 1024 test.svg
                 #cmd = "convert %s %s"%(fromName, toName)
-                cmd = 'inkscape -z -e "pngs/%s" -w 64 -h 64 "%s" -y 1.0 -b #ffffff'%(toName, fromName)
+                cmd = 'inkscape -z -e "pngs/%s" -w %d "%s" -y 1.0 -b #ffffff'%(toName, size, fromName)
                 return cmd
     return 'echo "Do nothing"'
 

@@ -20,7 +20,7 @@ Mat fourier_descriptors(Mat img, int k){
     }
 
     vector<complex<double>> output, output_truncated;
-    dft(points, output, DFT_COMPLEX_OUTPUT);
+    dft(points, output, DFT_COMPLEX_OUTPUT|DFT_SCALE);
 
     for(int i=1; i<min(k, (int)output.size()); i++){
         output_truncated.push_back(output[i]);
@@ -30,14 +30,16 @@ Mat fourier_descriptors(Mat img, int k){
     }
 
     vector<complex<double>> inversed;
-    dft(output_truncated, inversed, DFT_COMPLEX_OUTPUT|DFT_INVERSE);
+    dft(output_truncated, inversed, DFT_COMPLEX_OUTPUT|DFT_SCALE|DFT_INVERSE);
+    Mat result(Size(2*output_truncated.size(), 1), CV_64F);
+    int index = 0;
     for(auto o: inversed){
-        cout<<o<<endl;
+        result.at<double>(0, index) = o.real();
+        result.at<double>(0, index+1) = o.imag();
+        index = index + 2;
     }
 
-
-    Mat zeros;
-    return zeros;
+    return result;
 }
 
 
@@ -45,7 +47,8 @@ int main(int argc, char *argv[]){
     Mat img = imread(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
     threshold(img, img, 127, 255, CV_THRESH_OTSU);
 
-    fourier_descriptors(img, 10);
+    Mat x = fourier_descriptors(img, 10);
+    cout<<x<<endl;
     return 0;
 
 

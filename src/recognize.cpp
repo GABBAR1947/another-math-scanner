@@ -184,6 +184,7 @@ Mat padd_image(Mat img, int width){
 
 Mat circular_topology_features(Mat image){
     Mat padded = padd_image(image, 256);
+    Canny(padded, padded, 50, 150, 3);
     double max_radius, spacing;
     int count = 9;
     max_radius = (double)((padded.rows - 10)/2);
@@ -224,8 +225,8 @@ Mat extractFeatures(Mat &img){
 
     vector<Mat> features = {
         //hu_moments(img),
-        misc_features(img),
-        circular_topology_features(img),
+        //misc_features(img),
+        //circular_topology_features(img),
         fourier_descriptors(img, 10)
     };
 
@@ -249,13 +250,15 @@ Mat extractForeground(Mat &img){
             if(img.at<unsigned char>(i, j)==0){
                 min_y = min(min_y, i);
                 max_y = max(max_y, i);
-                min_x = min(min_x, i);
-                max_x = max(max_x, i);
+                min_x = min(min_x, j);
+                max_x = max(max_x, j);
             }
         }
     }
+    Rect roi = Rect(min_x, min_y, max_x-min_x+1, max_y-min_y+1);
+    cout<<"Boundary:"<<roi<<endl;
 
-    return img(Rect(min_x, min_y, max_x-min_x+1, max_y-min_y+1));
+    return img(roi);
 }
 
 recognizer::recognizer(string name){
@@ -268,9 +271,12 @@ recognizer::recognizer(string name){
         labels.push_back(label);
 
         Mat img = imread("pngs/"+filename, CV_LOAD_IMAGE_GRAYSCALE);
+        //imshow("output", img);
+        //waitKey(0);
         /* Get only black region from image. */
         threshold(img, img, 127, 255, CV_THRESH_OTSU);
         img = extractForeground(img);
+        cout<<"Extracted foreground"<<endl;
 
         //Mat feature = hu_moments(img);
         Mat feature = extractFeatures(img);
